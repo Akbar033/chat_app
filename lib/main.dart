@@ -2,7 +2,7 @@ import 'package:chatapp/function/searchUer.dart';
 import 'package:chatapp/viewModel/auth/createUser.dart';
 import 'package:chatapp/viewModel/auth/loginAuthProvider.dart';
 import 'package:chatapp/viewModel/auth/logoutAuthprovider.dart';
-import 'package:chatapp/views/userSession.dart';
+import 'package:chatapp/views/SplashScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +30,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: Usersession());
+    return MaterialApp(debugShowCheckedModeBanner: false, home: SplashScreen());
   }
 }

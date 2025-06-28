@@ -1,3 +1,4 @@
+import 'package:chatapp/function/imagePicker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -43,12 +44,18 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: StreamBuilder<DocumentSnapshot>(
-          stream: firestore.collection('user').doc(userMap['uid']).snapshots(),
+          stream: firestore.collection('users').doc(userMap['uid']).snapshots(),
           builder: (context, snapshot) {
             if (snapshot.data != null) {
               return Container(
                 child: Column(
-                  children: [Text(userMap['name']), Text(userMap['status'])],
+                  children: [
+                    Text(userMap['name']),
+                    Text(
+                      snapshot.data!['status'],
+                      style: TextStyle(fontSize: 10),
+                    ),
+                  ],
                 ),
               );
             } else {
@@ -141,6 +148,12 @@ class ChatScreen extends StatelessWidget {
                   child: TextField(
                     controller: massageController,
                     decoration: InputDecoration(
+                      suffix: IconButton(
+                        onPressed: () {
+                          getImage();
+                        },
+                        icon: Icon(Icons.image),
+                      ),
                       labelText: "Message",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),

@@ -1,6 +1,7 @@
 import 'package:chatapp/Utils/customfield.dart';
 import 'package:chatapp/viewModel/auth/logoutAuthprovider.dart';
 import 'package:chatapp/views/ChatScreen.dart';
+import 'package:chatapp/views/UserList.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -23,24 +24,33 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
   void onSearch() async {
     setState(() => _isLoading = true);
 
-    final firestore = FirebaseFirestore.instance;
-    await firestore
-        .collection('users')
-        .where("email", isEqualTo: search.text.trim())
-        .get()
-        .then((snapshot) {
-          if (snapshot.docs.isNotEmpty) {
-            // snapshot.docs[0].data() is a Map<String, dynamic>
-            setState(() {
-              userMap = snapshot.docs[0].data();
-              _isLoading = false;
-            });
-            print("Full user data: $userMap");
-          } else {
-            setState(() => _isLoading = false);
-            print("No user found");
-          }
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .where("email", isEqualTo: search.text.trim())
+              .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        setState(() {
+          userMap = snapshot.docs[0].data();
+          _isLoading = false;
         });
+        print("Full user data: $userMap");
+      } else {
+        setState(() {
+          _isLoading = false;
+          userMap = null; // clear previous result
+        });
+        print("No user found");
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      print("Search failed: $e");
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+    }
   }
 
   String chatRoomId(String user1, String user2) {
@@ -81,9 +91,22 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
   FirebaseFirestore firestore = FirebaseFirestore.instance;
 
   void setStatus(String status) async {
-    await firestore.collection('users').doc(auth.currentUser!.uid).update({
-      'status': status,
-    });
+    final user = auth.currentUser;
+    if (user == null) return;
+
+    final docRef = firestore.collection('users').doc(user.uid);
+    final docSnap = await docRef.get();
+
+    if (docSnap.exists) {
+      await docRef.update({'status': status});
+    } else {
+      await docRef.set({
+        'name': user.displayName ?? 'No Name',
+        'email': user.email ?? 'No Email',
+        'uid': user.uid,
+        'status': status,
+      });
+    }
   }
 
   @override
@@ -221,12 +244,34 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
                       )
                       : Container(
                         child: Text(
-                          "use user found",
+                          "Added user list",
                           style: TextStyle(
-                            color: const Color.fromARGB(255, 228, 226, 226),
+                            color: const Color.fromARGB(255, 126, 199, 193),
                           ),
                         ),
                       ),
+                  Expanded(
+                    child: InkWell(
+                      child: UserList(),
+                      onTap: () {
+                        String roomId = chatRoomId(
+                          auth.currentUser!.displayName ?? '',
+                          userMap!['name'],
+                        );
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ChatScreen(
+                                  userMap: userMap!,
+                                  chatRoomId: roomId,
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -234,19 +279,5 @@ class _HomepageState extends State<Homepage> with WidgetsBindingObserver {
         ],
       ),
     );
-  }
-}
-
-String chatRoomId(String user1, String user2) {
-  if (user1.isEmpty || user2.isEmpty) {
-    throw ArgumentError('user cannot be empty');
-  }
-  int user1Code = user1[0].toLowerCase().codeUnitAt(0);
-  int user2Code = user2[0].toLowerCase().codeUnitAt(0);
-
-  if (user1Code > user2Code) {
-    return "$user1Code$user2Code";
-  } else {
-    return "$user2Code$user1Code";
   }
 }

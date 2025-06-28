@@ -1,13 +1,15 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logger/web.dart';
 
 class CreateuserProvider extends ChangeNotifier {
   String? erromassage;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  var logger = Logger();
 
   Future<Type> CreateAccount(
     String email,
@@ -20,6 +22,7 @@ class CreateuserProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      await Future.delayed(const Duration(seconds: 3));
       final user = await (auth.createUserWithEmailAndPassword(
         email: email,
         password: pass,
@@ -27,8 +30,9 @@ class CreateuserProvider extends ChangeNotifier {
 
       User? userCredential = user.user;
       // if statement can be place after user is created;
-      print(user);
-      print("user created succesfully");
+      log(user.toString());
+      log("user created succesfully");
+      logger.d('user created succesfully');
 
       if (userCredential != null) {
         await userCredential.updateProfile(displayName: name);
@@ -36,10 +40,10 @@ class CreateuserProvider extends ChangeNotifier {
       await _firestore.collection("users").doc(auth.currentUser?.uid).set({
         "name": name,
         'email': email,
-        'status': "unavailable",
+        'status': "offline",
         'uid': auth.currentUser!.uid,
       });
-      print("data saved succesfully");
+      log("data saved succesfully");
     } // try ended
     on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {

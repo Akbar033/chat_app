@@ -1,6 +1,7 @@
 import 'package:chatapp/views/homepage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:developer';
 
 class Loginauthprovider extends ChangeNotifier {
   String? errormassage;
@@ -21,7 +22,7 @@ class Loginauthprovider extends ChangeNotifier {
         password: pass,
       );
 
-      print("user logged in");
+      log("user logged in succesfully");
       _isLoading = false;
       notifyListeners();
       ScaffoldMessenger.of(context).showSnackBar(

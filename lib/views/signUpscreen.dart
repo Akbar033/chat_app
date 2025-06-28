@@ -2,6 +2,7 @@ import 'package:chatapp/viewModel/auth/createUser.dart';
 import 'package:chatapp/views/login.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:logger/logger.dart';
 
 class SignupScreen extends StatelessWidget {
   SignupScreen({super.key});
